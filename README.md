@@ -54,3 +54,4 @@ export default tseslint.config({
 ```
 "# captain" 
 "# cap" 
+"# cloud-fe" 

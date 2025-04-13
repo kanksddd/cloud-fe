@@ -1,3 +1,4 @@
+// login-form.tsx
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -10,69 +11,48 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
-          </CardDescription>
+          <CardDescription>Enter your email below to login to your account</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={(e) => {
+          <form onSubmit={async (e) => {
             e.preventDefault()
             const email = (e.target as any).email.value
             const password = (e.target as any).password.value
 
-            const users = JSON.parse(localStorage.getItem("users") || "[]")
-            const found = users.find((u: any) => u.email === email && u.password === password)
-            if (found) {
-                localStorage.setItem("loggedInUser", JSON.stringify(found))
-                window.location.href = "/Home" // redirect to homepage
-            } 
-            else {
-                alert("❌ Invalid credentials")
+            try {
+              const res = await fetch("http://localhost:8000/auth/login", {
+                method: "POST",
+                body: new URLSearchParams({ email, password }),
+              })
+
+              if (!res.ok) {
+                const err = await res.json()
+                throw new Error(err.detail)
+              }
+
+              const user = await res.json()
+              localStorage.setItem("loggedInUser", JSON.stringify(user))
+              window.location.href = "/Home"
+            } catch (err: any) {
+              alert("❌ " + err.message)
             }
-            }}>
+          }}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                />
+                <Input id="email" type="email" placeholder="m@example.com" required />
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" required />
               </div>
-              <Button type="submit" className="w-full">
-                Login
-              </Button>
-              <Button variant="outline" className="w-full">
-                Login with Google
-              </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <a href="#" className="underline underline-offset-4">
-                Sign up
-              </a>
+              <Button type="submit" className="w-full">Login</Button>
             </div>
           </form>
         </CardContent>

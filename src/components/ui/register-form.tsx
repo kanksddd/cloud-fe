@@ -1,3 +1,4 @@
+// register-form.tsx
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,19 +10,27 @@ export function RegisterForm() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
 
-  function handleRegister(e: React.FormEvent) {
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
 
-    const newUser = { email, username, password }
+    try {
+      const res = await fetch("http://localhost:8000/auth/register", {
+        method: "POST",
+        body: new URLSearchParams({ username, email, password }),
+      })
 
-    const existing = JSON.parse(localStorage.getItem("users") || "[]")
-    const updated = [...existing, newUser]
-    localStorage.setItem("users", JSON.stringify(updated))
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.detail)
+      }
 
-    alert("✅ Registered! Now you can login.")
-    setEmail("")
-    setUsername("")
-    setPassword("")
+      alert("✅ Registered! You can now login.")
+      setEmail("")
+      setUsername("")
+      setPassword("")
+    } catch (err: any) {
+      alert("❌ " + err.message)
+    }
   }
 
   return (
