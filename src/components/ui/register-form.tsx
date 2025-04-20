@@ -1,4 +1,3 @@
-// register-form.tsx
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -34,25 +33,25 @@ export function RegisterForm() {
   }
 
   return (
-    <Card>
+    <Card className="w-full max-w-xl bg-[#1b1b1b] text-white p-6 shadow-xl rounded-2xl border-3 border-blue-400">
       <CardHeader>
         <CardTitle className="text-2xl">Register</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleRegister} className="flex flex-col gap-4">
-          <div>
+          <div  className="grid gap-2">
             <Label htmlFor="username">Username</Label>
-            <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+            <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} required className="border-blue-400 text-white"/>
           </div>
-          <div>
+          <div  className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="border-blue-400 text-white"/>
           </div>
-          <div>
+          <div  className="grid gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="border-blue-400 text-white"/>
           </div>
-          <Button type="submit" className="w-full">Register</Button>
+          <Button type="submit" className="w-full grid gap-2 bg-blue-400 hover:bg-black">Register</Button>
         </form>
       </CardContent>
     </Card>

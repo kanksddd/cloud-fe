@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router"
+import { useVolume } from "@/components/ui/VolumeContext.tsx" 
 
 type Sound = {
   id: number
@@ -16,6 +17,7 @@ type Sound = {
   image: string
   audioUrl: string
   user_id: number
+  description: string
 
 }
 
@@ -25,12 +27,14 @@ export default function MySound() {
   const navigate = useNavigate()
   const [editId, setEditId] = useState<number | null>(null)
   const [newTitle, setNewTitle] = useState("")
+  const { volume } = useVolume()
 
   useEffect(() => {
+    
     const loggedIn = localStorage.getItem("loggedInUser")
     
     if (!loggedIn) {
-      navigate("/login")
+      navigate("/Login")
       return
     }
 
@@ -59,9 +63,12 @@ export default function MySound() {
   function playSound(url: string) {
     if (currentAudio) currentAudio.pause()
     const audio = new Audio(url)
+    audio.volume = volume
+    console.log("🔊 Playing with volume:", volume)
     setCurrentAudio(audio)
     audio.play()
   }
+
   function deleteSound(id: number) {
     fetch(`http://localhost:8000/sound_board/sounds/${id}`, {
       method: "DELETE",
@@ -99,34 +106,40 @@ export default function MySound() {
       })
       .catch(console.error)
   }
+  useEffect(() => {
+    if (currentAudio) {
+      currentAudio.volume = volume
+    }
+  }, [volume, currentAudio])
 
 
   return (
     <>
       <NavBar />
-      <div className="min-h-screen bg-gradient-to-b from-pink-300 via-purple-400 to-indigo-500 text-white">
-      <div className="flex justify-center items-center py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="min-h-screen bg-gradient-to-br from-[#0d0f2b] via-[#1b1b1b] to-[#0a0a0a] text-white">
+      <div className="pt-28 px-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 justify-center">
           {mySounds.map((sound) => (
-            <Card key={sound.id} className="w-full max-w-xl bg-white/70 backdrop-blur-md text-white p-6 shadow-xl rounded-2xl border border-white/20">
-              <CardHeader>
-                <img src={sound.image} alt="Sound" className="w-20 h-20 mx-auto rounded-full object-cover" />
+            <Card key={sound.id} className="w-full max-w-xl bg-[#1b1b1b] text-white p-6 shadow-xl rounded-2xl border-3 border-blue-400">
+              <CardHeader className="flex flex-col items-center">
+                <img src={sound.image} alt="Sound" className="w-24 h-24 rounded-full object-cover shadow-md " />
                 {editId === sound.id ? (
                     <div className="flex flex-col gap-2">
                         <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="text-center border p-1 rounded"/>
-                        <Button size="sm" onClick={() => updateSoundTitle(sound.id)}>
+                        <Button size="sm" onClick={() => updateSoundTitle(sound.id)} className="bg-red-500">
                              Save
                         </Button>
                     </div>
                 ) : (
-                        <CardTitle className="mt-2 text-xl">{sound.title}</CardTitle>
+                        <CardTitle className="mt-4 text-center text-m font-bold tracking-wide text-white">Name: {sound.title}</CardTitle>
+                        
                     )}
-                
+                        <CardTitle className="mt-2 text-center text-m font-bold tracking-wide text-white">Date: {sound.description}</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <Button onClick={() => playSound(sound.audioUrl)}>Play</Button>
-                        <Button onClick={() => deleteSound(sound.id)} className="ml-2">Delete</Button>
-                        <Button onClick={() => { setEditId(sound.id); setNewTitle(sound.title) }} className="ml-2">Edit</Button>
+                    <CardContent className="flex justify-center">
+                        <Button onClick={() => playSound(sound.audioUrl)} className="bg-blue-400" >Play</Button>
+                        <Button onClick={() => deleteSound(sound.id)} className="ml-2 bg-red-500" >Delete</Button>
+                        <Button onClick={() => { setEditId(sound.id); setNewTitle(sound.title) }} className="ml-2 bg-blue-400">Edit</Button>
                     </CardContent>
             </Card>
           ))}

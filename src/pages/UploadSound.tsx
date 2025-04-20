@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import NavBar from "../NavBar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,12 @@ export default function UploadSound() {
   const [audio, setAudio] = useState<File | null>(null)
 
   const navigate = useNavigate()
+  useEffect(() => {
+    const loggedIn = localStorage.getItem("loggedInUser")
+    if (!loggedIn) {
+      navigate("/Login")
+    }
+  }, [navigate])
 
   async function handleUpload() {
     if (!soundName || !image || !audio) {
@@ -59,21 +65,21 @@ export default function UploadSound() {
   return (
     <>
       <NavBar/>
-      <div className="min-h-screen bg-gradient-to-b from-pink-300 via-purple-400 to-indigo-500 text-white flex items-center justify-center py-12 px-4">
-      <Card className="w-full max-w-xl bg-white/50 backdrop-blur-md text-white p-6 shadow-xl rounded-2xl border border-white/20">
+      <div className="min-h-screen bg-gradient-to-br from-[#0d0f2b] via-[#1b1b1b] to-[#0a0a0a] text-white flex items-center justify-center ">
+      <Card className="w-full max-w-xl bg-[#1b1b1b] text-white p-6 shadow-xl rounded-2xl border-3 border-blue-400 ">
       <CardHeader>
-        <CardTitle className="text-2xl text-center font-bold tracking-wide">
-          Upload a Sound 🎵
+        <CardTitle className="text-2xl text-center font-bold tracking-wide text-white">
+          Upload the Sound 
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 text-white">
         <div>
           <Label>Sound Name</Label>
           <Input
             value={soundName}
             onChange={(e) => setSoundName(e.target.value)}
-            className="mt-1"
+            className="mt-2 border-blue-400 text-white placeholder-white"
           />
         </div>
 
@@ -83,7 +89,7 @@ export default function UploadSound() {
             type="file"
             accept="image/*"
             onChange={(e) => setImage(e.target.files?.[0] || null)}
-            className="mt-1"
+            className="mt-2 border-blue-400 text-white placeholder-white"
           />
         </div>
 
@@ -93,13 +99,13 @@ export default function UploadSound() {
             type="file"
             accept="audio/*"
             onChange={(e) => setAudio(e.target.files?.[0] || null)}
-            className="mt-1"
+            className="mt-2 border-blue-400 text-white placeholder-white"
           />
         </div>
       </CardContent>
 
       <CardFooter className="flex justify-center">
-        <Button onClick={handleUpload}>Upload</Button>
+        <Button onClick={handleUpload} className="bg-blue-400 hover:bg-black">Upload</Button>
       </CardFooter>
     </Card>
       </div>

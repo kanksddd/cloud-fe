@@ -9,6 +9,7 @@ import UploadSound from './pages/UploadSound.tsx'
 import MySound from './pages/MySound.tsx'
 import CreateSound from './pages/CreateSound.tsx'
 import Login from './pages/Login.tsx'
+import { VolumeProvider } from './components/ui/VolumeContext.tsx'
 
 const router = createBrowserRouter([
   {path:'/', element:<App/>},
@@ -22,6 +23,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+  <VolumeProvider>
   <RouterProvider router={router}/>
+  </VolumeProvider>
   </StrictMode>,
 )
