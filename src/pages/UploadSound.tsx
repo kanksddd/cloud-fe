@@ -159,7 +159,7 @@ export default function UploadSound() {
       ])
   
       console.log("✅ Upload complete")
-      navigate("/Home")
+      navigate("/MySound")
     } catch (error) {
       alert("❌ Upload failed: " + (error instanceof Error ? error.message : JSON.stringify(error)))
     }
