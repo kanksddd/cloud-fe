@@ -20,20 +20,23 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
         <CardContent>
           <form onSubmit={async (e) => {
             e.preventDefault()
-            const email = (e.target as any).email.value
+            const username = (e.target as any).username.value
             const password = (e.target as any).password.value
 
             try {
-              const res = await fetch("http://localhost:8000/auth/login", {
+              const res = await fetch("https://mdggjbti4b.execute-api.ap-southeast-1.amazonaws.com/dev/auth/login", {
                 method: "POST",
-                body: new URLSearchParams({ email, password }),
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username, password }),
               })
-
+            
               if (!res.ok) {
-                const err = await res.json()
-                throw new Error(err.detail)
+                const error = await res.json()
+                throw new Error(error.detail)
               }
-
+            
               const user = await res.json()
               localStorage.setItem("loggedInUser", JSON.stringify(user))
               window.location.href = "/Home"
@@ -43,8 +46,8 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
           }}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" required className="border-blue-400 text-white" />
+                <Label htmlFor="username">Username</Label>
+                <Input id="username" type="username" required className="border-blue-400 text-white" />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>

@@ -18,6 +18,7 @@ type Sound = {
   audioUrl: string
   user_id: number
   description: string
+  visibility: string
 
 }
 
@@ -54,6 +55,7 @@ export default function MySound() {
             image: item.image_url || "/vite.svg",
             audioUrl: `http://localhost:8000/sound_board/sounds/${item.id}`,
             user_id: item.user_id,
+            visibility: item.visibility || "public",
           }))
         setMySounds(filtered)
       })
@@ -112,6 +114,24 @@ export default function MySound() {
     }
   }, [volume, currentAudio])
 
+  function toggleVisibility(id: number, current: string) {
+    const newVisibility = current === "public" ? "private" : "public"
+    const formData = new FormData()
+    formData.append("visibility", newVisibility)
+  
+    fetch(`http://localhost:8000/sound_board/sounds/${id}`, {
+      method: "PATCH",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((updated) => {
+        setMySounds((prev) =>
+          prev.map((s) => s.id === id ? { ...s, visibility: updated.visibility } : s)
+        )
+      })
+      .catch(console.error)
+  }
+
 
   return (
     <>
@@ -140,6 +160,12 @@ export default function MySound() {
                         <Button onClick={() => playSound(sound.audioUrl)} className="bg-blue-400" >Play</Button>
                         <Button onClick={() => deleteSound(sound.id)} className="ml-2 bg-red-500" >Delete</Button>
                         <Button onClick={() => { setEditId(sound.id); setNewTitle(sound.title) }} className="ml-2 bg-blue-400">Edit</Button>
+                        <Button
+                          onClick={() => toggleVisibility(sound.id, sound.visibility)}
+                          className="ml-2 bg-yellow-500"
+                        >
+                        {sound.visibility === "public" ? "Make Private" : "Make Public"}
+                         </Button>
                     </CardContent>
             </Card>
           ))}

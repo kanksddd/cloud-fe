@@ -23,15 +23,17 @@ export default function Home() {
        fetch("http://localhost:8000/sound_board/sounds/all") 
        .then((res) => res.json())
        .then((data) => {
-         const transformed = data.map((item: any) => ({
-           id: item.id,
-           title: item.sound_name,
-           description: `Uploaded on ${new Date(item.upload_date).toLocaleDateString()}`,
-           image: item.image_url , 
-           audioUrl: `http://localhost:8000/sound_board/sounds/${item.id}`, 
-         }))
-         setSoundList(transformed)
-       })
+        const transformed = data
+          .filter((item: any) => item.visibility === "public")
+          .map((item: any) => ({
+            id: item.id,
+            title: item.sound_name,
+            description: `Uploaded on ${new Date(item.upload_date).toLocaleDateString()}`,
+            image: item.image_url,
+            audioUrl: `http://localhost:8000/sound_board/sounds/${item.id}`,
+          }))
+        setSoundList(transformed)
+      })
        .catch(console.error)
    }, [])
 
