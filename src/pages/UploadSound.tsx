@@ -116,40 +116,55 @@ export default function UploadSound() {
       return
     }
   
-    const uploadToS3 = async (file: File) => {
-      const extension = '.' + (file.name.split('.').pop() || '')
+    // Extract file extensions
+    const imageExtension = image.name.split('.').pop()
+    const audioExtension = audio.name.split('.').pop()
+  
+    const picturefile = `image.${imageExtension}`
+    const soundfile = `${soundName}.${audioExtension}`
+  
+    try {
+      // STEP 1: Request upload URLs from backend
       const presignRes = await fetch("https://mdggjbti4b.execute-api.ap-southeast-1.amazonaws.com/dev/soundboard/sounds", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: loggedInUser.username,
+        body: JSON.stringify({
+          username: loggedInUser.username,
           session: loggedInUser.session,
-          soundfile: soundKey,
-          picturefile: imageKey,
-          visibility: 'public'  })
+          soundfile,
+          picturefile,
+          visibility  
+        })
       })
   
-      const { url, key } = await presignRes.json()
+      if (!presignRes.ok) {
+        const err = await presignRes.json()
+        throw new Error(err.detail || "Failed to get upload URLs")
+      }
   
-      await fetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file
-      })
-
-      await fetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file
-      })
+      const { sound_upload_url, picture_upload_url } = await presignRes.json()
   
-      return `${key}${extension}`
-    }
-  
-    try {
-      const [imageKey, soundKey] = await Promise.all([
-        uploadToS3(image!),
-        uploadToS3(audio!)
+      // STEP 2: Upload files to pre-signed URLs
+      await Promise.all([
+        fetch(picture_upload_url, {
+          method: "PUT",
+          headers: { "Content-Type": image.type },
+          body: image
+        }),
+        fetch(sound_upload_url, {
+          method: "PUT",
+          headers: { "Content-Type": audio.type },
+          body: audio
+        })
       ])
+  
+      console.log("✅ Upload complete")
+      navigate("/Home")
+    } catch (error) {
+      alert("❌ Upload failed: " + (error instanceof Error ? error.message : JSON.stringify(error)))
+    }
+  }
+  
   
       // 🔥 Send exact format required by your backend
       // const response = await fetch("https://mdggjbti4b.execute-api.ap-southeast-1.amazonaws.com/dev/soundboard/sounds", {
@@ -164,17 +179,17 @@ export default function UploadSound() {
       //   })
       // })
   
-      if (!response.ok) {
-        const err = await response.json()
-        throw new Error(err.detail || "❌ Failed to save sound info")
-      }
+  //     if (!response.ok) {
+  //       const err = await response.json()
+  //       throw new Error(err.detail || "❌ Failed to save sound info")
+  //     }
   
-      console.log("✅ Uploaded successfully")
-      navigate("/Home")
-    } catch (error) {
-      alert("❌ Upload failed: " + (error instanceof Error ? error.message : JSON.stringify(error)))
-    }
-  }
+  //     console.log("✅ Uploaded successfully")
+  //     navigate("/Home")
+  //   } catch (error) {
+  //     alert("❌ Upload failed: " + (error instanceof Error ? error.message : JSON.stringify(error)))
+  //   }
+  // }
   
 
 
