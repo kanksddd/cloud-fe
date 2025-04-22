@@ -10,8 +10,8 @@ import MySound from './pages/MySound.tsx'
 import CreateSound from './pages/CreateSound.tsx'
 import Login from './pages/Login.tsx'
 import { VolumeProvider } from './components/ui/VolumeContext.tsx'
-import Demopage1 from './Demo/Demopage1.tsx'
- import Demopage2 from './Demo/Demopage2.tsx'
+// import Demopage1 from './Demo/Demopage1.tsx'
+//  import Demopage2 from './Demo/Demopage2.tsx'
 
 const router = createBrowserRouter([
   {path:'/', element:<App/>},
@@ -20,8 +20,8 @@ const router = createBrowserRouter([
   {path:'/MySound', element:<MySound/>},
   {path:'/CreateSound', element:<CreateSound/>},
   {path:'/Login', element:<Login/>},
-  {path:'/Demopage1', element:<Demopage1/>},
-  {path:'/Demopage2', element:<Demopage2/>},
+  // {path:'/Demopage1', element:<Demopage1/>},
+  // {path:'/Demopage2', element:<Demopage2/>},
   {path:'*', element:<NotFoundPage/>}
 ]);
 

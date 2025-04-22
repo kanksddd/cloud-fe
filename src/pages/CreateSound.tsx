@@ -14,6 +14,8 @@ import {
 
 export default function CreateSound() {
   const [text, setText] = useState("")
+  const [soundname, setName] = useState("")
+  const [image, setImage] = useState<File | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -24,35 +26,55 @@ export default function CreateSound() {
   }, [navigate])
 
   async function handleCreate() {
-    if (!text) {
-      alert("Please enter text")
+    if (!text || !image) {
+      alert("Please fill in all fields")
       return
     }
+    
 
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}")
-    if (!loggedInUser.id) {
+    if (!loggedInUser.session) {
       alert("You must be logged in to create.")
       return
     }
 
-    const formData = new FormData()
-    formData.append("user_id", loggedInUser.id)
-    formData.append("text", text)
+    // Extract file extensions
+    const imageExtension = image.name.split('.').pop()
+    const picturefile = `image.${imageExtension}`
+
 
     try {
-      const response = await fetch("http://localhost:8000/sound_board/create_text", {
+      const response = await fetch("https://mdggjbti4b.execute-api.ap-southeast-1.amazonaws.com/dev/soundboard/sounds/create", {
         method: "POST",
-        body: formData,
+        body: JSON.stringify({
+          username: loggedInUser.username,
+          session: loggedInUser.session,
+          soundtext: text,
+          soundname: soundname,
+          picturefile
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        }
       })
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.detail || "Creation failed")
+        throw new Error(error.detail || "Failed to create sound or get URLs")
       }
 
-      const result = await response.json()
-      console.log("✅ Created:", result)
-      navigate("/home")
+      const { picture_upload_url } = await response.json()
+
+      await Promise.all([
+        fetch(picture_upload_url, {
+          method: "PUT",
+          headers: { "Content-Type": image.type },
+          body: image
+        })
+      ])
+
+      console.log("✅ Upload and creation completed")
+      navigate("/MySound")
     } catch (error) {
       alert("❌ " + error)
     }
@@ -71,6 +93,18 @@ export default function CreateSound() {
 
           <CardContent className="space-y-4 text-white">
             <div>
+              <Label>Sound Name</Label>
+              <Input
+                value={soundname}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="What do you want to call this sound?"
+                className="mt-2 border-blue-400 text-white placeholder-white"
+              />
+            </div>
+          </CardContent>
+
+          <CardContent className="space-y-4 text-white">
+            <div>
               <Label>Please Enter Text</Label>
               <Input
                 value={text}
@@ -80,6 +114,16 @@ export default function CreateSound() {
               />
             </div>
           </CardContent>
+
+          <div>
+            <Label>Picture (jpg/png)</Label>
+            <Input
+              type="file"
+              accept=".jpg,.jpeg,.png"
+              onChange={(e) => setImage(e.target.files?.[0] || null)}
+              className="mt-2 border-blue-400 text-white placeholder-white"
+            />
+          </div>
 
           <CardFooter className="flex justify-center">
             <Button onClick={handleCreate} className="bg-blue-400">Create</Button>

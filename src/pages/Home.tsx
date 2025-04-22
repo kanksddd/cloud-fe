@@ -10,6 +10,8 @@ type Sound = {
     image: string 
     audioUrl: string
     description: string
+    upload_date: string
+    user_id: string
   }
 
 export default function Home() {
