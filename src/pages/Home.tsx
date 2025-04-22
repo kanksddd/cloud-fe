@@ -17,20 +17,24 @@ export default function Home() {
     const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
     const { volume } = useVolume()
  
-     useEffect(() => {
-      
-
-       fetch("http://localhost:8000/sound_board/sounds/all") 
+    useEffect(() => {
+       fetch("https://mdggjbti4b.execute-api.ap-southeast-1.amazonaws.com/dev/soundboard/sounds/all", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }) 
        .then((res) => res.json())
        .then((data) => {
-        const transformed = data
+        const transformed = data["sounds"]
           .filter((item: any) => item.visibility === "public")
           .map((item: any) => ({
-            id: item.id,
-            title: item.sound_name,
-            description: `Uploaded on ${new Date(item.upload_date).toLocaleDateString()}`,
-            image: item.image_url,
-            audioUrl: `http://localhost:8000/sound_board/sounds/${item.id}`,
+            id: item.soundid,
+            title: item.name,
+            upload_date: item.upload_date,
+            image: item.picture_url,
+            audioUrl: item.sound_url,
+            user_id: item.owner,
           }))
         setSoundList(transformed)
       })
@@ -64,8 +68,9 @@ export default function Home() {
                     <Card key={sound.id} className="w-full max-w-xl bg-[#1b1b1b] text-white p-6 shadow-xl rounded-2xl border-3 border-blue-400">
                         <CardHeader className="flex flex-col items-center">
                         <img src={sound.image} alt="Sound" className="w-24 h-24 rounded-full object-cover shadow-md border-4 border-blue-400 " />
-                        <CardTitle className="mt-4 text-center text-m font-medium tracking-wide text-white">Name: {sound.title}</CardTitle>
-                        <CardTitle className="mt-2 text-center text-m font-medium tracking-wide text-white">Date: {sound.description}</CardTitle>
+                        <CardTitle className="text-2xl mt-4 text-center text-m font-bold tracking-wide text-white">{sound.title}</CardTitle>
+                        <CardTitle className="mt-2 text-center text-m font-medium tracking-wide text-gray-500">{sound.upload_date}</CardTitle>
+                        <CardTitle className="mt-2 text-center text-m font-medium tracking-wide text-gray-500">Owner {sound.user_id}</CardTitle>
                         </CardHeader>
                         <CardContent className="flex justify-center">
                             <Button onClick={() => playSound(sound.audioUrl)} className="bg-blue-400">Play</Button>
