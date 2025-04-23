@@ -19,45 +19,51 @@ type Sound = {
   user_id: number
   description: string
   visibility: string
-
 }
 
 export default function MySound() {
   const [mySounds, setMySounds] = useState<Sound[]>([])
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
-  const navigate = useNavigate()
   const [editId, setEditId] = useState<number | null>(null)
   const [newTitle, setNewTitle] = useState("")
   const { volume } = useVolume()
-
+  const navigate = useNavigate()  
+  
   useEffect(() => {
-    
     const loggedIn = localStorage.getItem("loggedInUser")
     
     if (!loggedIn) {
       navigate("/Login")
       return
     }
-
     const user = JSON.parse(loggedIn)
-    const userId = user.id
 
-    fetch("http://localhost:8000/sound_board/sounds/all")
+    fetch("https://mdggjbti4b.execute-api.ap-southeast-1.amazonaws.com/dev/soundboard/sounds/user", {
+      method: "POST",
+      body: JSON.stringify({ username: user.username, session: user.session }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
       .then((res) => res.json())
       .then((data) => {
-        const filtered = data
-          .filter((item: any) => parseInt(item.user_id) === userId)
+        if(data["success"] !== true) {
+          console.error("Failed to fetch sounds:", data)
+          return
+        }
+        data = data["sounds"]
 
+        const mapped = data
           .map((item: any) => ({
-            id: item.id,
-            title: item.sound_name,
-            description: `Uploaded on ${new Date(item.upload_date).toLocaleDateString()}`,
-            image: item.image_url || "/vite.svg",
-            audioUrl: `http://localhost:8000/sound_board/sounds/${item.id}`,
-            user_id: item.user_id,
-            visibility: item.visibility || "public",
+            id: item.soundid,
+            title: item.name,
+            upload_date: item.upload_date,
+            image: item.picture_url,
+            audioUrl: item.sound_url,
+            user_id: item.owner,
+            visibility: item.visibility,
           }))
-        setMySounds(filtered)
+        setMySounds(mapped)
       })
       .catch(console.error)
   }, [navigate])
@@ -72,8 +78,18 @@ export default function MySound() {
   }
 
   function deleteSound(id: number) {
-    fetch(`http://localhost:8000/sound_board/sounds/${id}`, {
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}")
+    if (!loggedInUser.username || !loggedInUser.session) {
+      alert("You must be logged in to upload.")
+      return
+    }
+
+    fetch(`https://mdggjbti4b.execute-api.ap-southeast-1.amazonaws.com/dev/soundboard/sounds/`, {
       method: "DELETE",
+      body: JSON.stringify({ sound: id, session: loggedInUser.session, username: loggedInUser.username }),
+      headers: {
+        "Content-Type": "application/json",
+      },
     })
       .then((res) => {
         if (res.ok) {
@@ -87,51 +103,84 @@ export default function MySound() {
         console.error("Error deleting sound:", err)
       })
   }
-  function updateSoundTitle(id: number) {
-    const formData = new FormData()
-    formData.append("sound_name", newTitle)
   
-    fetch(`http://localhost:8000/sound_board/sounds/${id}`, {
+  function updateSoundTitle(id: number) {
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}")
+    if (!loggedInUser.username || !loggedInUser.session) {
+      alert("You must be logged in to upload.")
+      return
+    }
+    if (!newTitle) {
+      alert("Please enter a new title")
+      return
+    }
+    if (newTitle.length > 20) {
+      alert("Title must be less than 20 characters")
+      return
+    }
+    if (newTitle.length < 3) {
+      alert("Title must be more than 3 characters")
+      return
+    }
+    if (newTitle === mySounds.find((sound) => sound.id === id)?.title) {
+      alert("Title is the same as before")
+      return
+    }
+    if (newTitle === "") {
+      alert("Please enter a new title")
+      return
+    }
+
+    fetch(`https://mdggjbti4b.execute-api.ap-southeast-1.amazonaws.com/dev/soundboard/sounds/`, {
       method: "PATCH",
-      body: formData,
+      body: JSON.stringify({ sound: id, soundname: newTitle, session: loggedInUser.session, username: loggedInUser.username }),
+      headers: {
+        "Content-Type": "application/json",
+      },
     })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to update sound name")
         return res.json()
       })
-      .then((updated) => {
+      .then(() => {
         setMySounds((prev) =>
-          prev.map((s) => (s.id === id ? { ...s, title: updated.sound_name } : s))
+          prev.map((s) => (s.id === id ? { ...s, title: newTitle } : s))
         )
         setEditId(null)
         setNewTitle("")
       })
       .catch(console.error)
   }
-  useEffect(() => {
-    if (currentAudio) {
-      currentAudio.volume = volume
-    }
-  }, [volume, currentAudio])
 
   function toggleVisibility(id: number, current: string) {
     const newVisibility = current === "public" ? "private" : "public"
-    const formData = new FormData()
-    formData.append("visibility", newVisibility)
-  
-    fetch(`http://localhost:8000/sound_board/sounds/${id}`, {
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}")
+    if (!loggedInUser.username || !loggedInUser.session) {
+      alert("You must be logged in to upload.")
+      return
+    }
+
+    fetch(`https://mdggjbti4b.execute-api.ap-southeast-1.amazonaws.com/dev/soundboard/sounds/`, {
       method: "PATCH",
-      body: formData,
+      body: JSON.stringify({ sound: id, visibility: newVisibility, session: loggedInUser.session, username: loggedInUser.username }),
+      headers: {
+        "Content-Type": "application/json",
+      },
     })
       .then((res) => res.json())
-      .then((updated) => {
+      .then(() => {
         setMySounds((prev) =>
-          prev.map((s) => s.id === id ? { ...s, visibility: updated.visibility } : s)
+          prev.map((s) => s.id === id ? { ...s, visibility: newVisibility } : s)
         )
       })
       .catch(console.error)
   }
 
+  useEffect(() => {
+    if (currentAudio) {
+      currentAudio.volume = volume
+    }
+  }, [volume, currentAudio])
 
   return (
     <>
@@ -154,7 +203,9 @@ export default function MySound() {
                         <CardTitle className="mt-4 text-center text-m font-bold tracking-wide text-white">Name: {sound.title}</CardTitle>
                         
                     )}
-                        <CardTitle className="mt-2 text-center text-m font-bold tracking-wide text-white">Date: {sound.description}</CardTitle>
+                        <CardTitle className="mt-2 text-center text-m font-bold tracking-wide text-white">Visibility: {sound.visibility}</CardTitle>
+                        <CardTitle className="mt-2 text-center text-m font-bold tracking-wide text-white">Owner: {sound.user_id}</CardTitle>
+                        <CardTitle className="mt-2 text-center text-m font-bold tracking-wide text-white">Upload Date: {sound.upload_date}</CardTitle>
                     </CardHeader>
                     <CardContent className="flex justify-center">
                         <Button onClick={() => playSound(sound.audioUrl)} className="bg-blue-400" >Play</Button>

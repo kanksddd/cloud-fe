@@ -11,7 +11,7 @@ import CreateSound from './pages/CreateSound.tsx'
 import Login from './pages/Login.tsx'
 import { VolumeProvider } from './components/ui/VolumeContext.tsx'
 import Demopage1 from './Demo/Demopage1.tsx'
- import Demopage2 from './Demo/Demopage2.tsx'
+import Demopage2 from './Demo/Demopage2.tsx'
 
 const router = createBrowserRouter([
   {path:'/', element:<App/>},

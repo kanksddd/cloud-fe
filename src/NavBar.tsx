@@ -68,27 +68,27 @@ export default function NavBar() {
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link to={'/UploadSound'}>
-              <NavigationMenuLink className={location.pathname === "/UploadSound"  ? "bg-white text-black rounded px-3 py-1" : ""}>
-                UploadSound
-              </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
               <Link to={'/MySound'}>
-                <NavigationMenuLink className={location.pathname === "/MySound" ? "bg-white text-black rounded px-3 py-1" : ""}>MySound</NavigationMenuLink>
+                <NavigationMenuLink className={location.pathname === "/MySound" ? "bg-white text-black rounded px-3 py-1" : ""}>My Sound</NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
               <Link to={'/CreateSound'}>
-                <NavigationMenuLink className={location.pathname === "/CreateSound" ? "bg-white text-black rounded px-3 py-1" : ""}>CreateSound</NavigationMenuLink>
+                <NavigationMenuLink className={location.pathname === "/CreateSound" ? "bg-white text-black rounded px-3 py-1" : ""}>Create Sound</NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link to={'/UploadSound'}>
+              <NavigationMenuLink className={location.pathname === "/UploadSound"  ? "bg-white text-black rounded px-3 py-1" : ""}>
+                Upload Sound
+              </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
             <div className="flex items-center gap-4 text-sm tracking-widest">
               {username ? (
                 <>
                   <NavigationMenuItem>
-                    <NavigationMenuLink>Welcome, {username}</NavigationMenuLink>
+                    <NavigationMenuLink>Welcome! {username}...</NavigationMenuLink>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
                     <Button variant="ghost" onClick={handleLogout} className="bg-red-500 text-black hover:bg-white px-3 py-1 rounded">
@@ -112,4 +112,3 @@ export default function NavBar() {
       
     )
 }
-
