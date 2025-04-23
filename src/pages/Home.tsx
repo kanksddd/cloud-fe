@@ -43,12 +43,32 @@ export default function Home() {
   }, [])
 
   function playSound(url: string) {
+    console.log("Trying to play sound from URL:", url)
+  
+    if (!url || !url.startsWith("https://")) {
+      console.error("Invalid or empty audio URL:", url)
+      alert("Cannot play this sound. It may not be available.")
+      return
+    }
+  
     if (currentAudio) currentAudio.pause()
+  
     const audio = new Audio(url)
     audio.volume = volume
+  
+    audio.onerror = (e) => {
+      console.error("Audio load error", e)
+      alert("This sound could not be loaded. Try again later.")
+    }
+  
     setCurrentAudio(audio)
-    audio.play()
+    audio.play().catch((err) => {
+      console.error("Play error", err)
+      alert("Playback failed. Your browser might not support this file.")
+    })
   }
+  
+  
 
   useEffect(() => {
     if (currentAudio) currentAudio.volume = volume
@@ -66,11 +86,20 @@ export default function Home() {
     ])
 
     socket.onopen = () => {
-      socket.send(JSON.stringify({ type: "connection_init" }))
+      console.log("WebSocket connected")
+    
+      const initPayload = {
+        type: "connection_init"
+      }
+    
+      socket.send(JSON.stringify(initPayload))
+      console.log(" Sent connection_init:", initPayload)
     }
 
-    socket.onmessage = ({ data }) => {
+    socket.onmessage = async ({ data }) => {
       const msg = JSON.parse(data)
+      console.log("[WebSocket] Message:", msg)
+    
       switch (msg.type) {
         case "connection_ack":
           socket.send(JSON.stringify({
@@ -87,6 +116,7 @@ export default function Home() {
                       visibility
                       soundinfo
                       ownerinfo
+                      urlinfo
                     }
                   }
                 `
@@ -101,49 +131,53 @@ export default function Home() {
             }
           }))
           break
-
-        case "data":
-          const sound = msg.payload.data.onMeeMSoundUpdated
-          const info = JSON.parse(sound.soundinfo)
-          const owner = JSON.parse(sound.ownerinfo)
-          const newSound = {
-            id: sound.soundid,
-            title: info.name,
-            upload_date: new Date(info.upload_date * 1000).toLocaleString(),
-            image: "",
-            audioUrl: "",
-            user_id: owner.username,
-            visibility: sound.visibility
-          }
-
-          setSoundList(prev => {
-            if (newSound.visibility === "deleted") {
-              return prev.filter((s) => s.id !== newSound.id)
+    
+          case "data":
+            const data = msg.payload?.data?.onMeeMSoundUpdated
+            if (!data) return
+          
+            const info = JSON.parse(data.soundinfo)
+            const owner = JSON.parse(data.ownerinfo)
+            const urls = data.urlinfo ? JSON.parse(data.urlinfo) : {}
+          
+            const newSound = {
+              id: data.soundid,
+              title: info.name,
+              upload_date: new Date(info.upload_date * 1000).toLocaleString(),
+              image: urls.picture || "/placeholder.jpg",
+              audioUrl: urls.sound || "",
+              user_id: owner.username,
+              visibility: data.visibility
             }
-
-            const index = prev.findIndex(s => s.id === newSound.id)
-            if (index !== -1) {
-              const updated = [...prev]
-              updated[index] = { ...updated[index], ...newSound }
-              return updated
-            }
-
-            if (newSound.visibility === "public") {
-              return [...prev, newSound]
-            }
-
-            return prev
-          })
-          break
-
+          
+            setSoundList(prev => {
+              const index = prev.findIndex(s => s.id === newSound.id)
+          
+             
+              if (newSound.visibility === "public") {
+                if (index !== -1) {
+                  
+                  const updated = [...prev]
+                  updated[index] = { ...prev[index], ...newSound }
+                  return updated
+                } else {
+                  
+                  return [...prev, newSound]
+                }
+              } else {
+                
+                return prev.filter(s => s.id !== newSound.id)
+              }
+            })
+            break
+          
+    
         case "error":
           console.error("[WebSocket error]", msg.payload)
           break
-
-        default:
-          break
       }
     }
+    
 
     return () => {
       if (socket.readyState === WebSocket.OPEN) {
